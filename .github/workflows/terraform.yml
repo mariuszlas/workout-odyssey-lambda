@@ -47,6 +47,5 @@ jobs:
           aws-region: eu-west-2
       - name: Initialise project and deploy terraform
         run: |
-          terraform fmt
           terraform init
           terraform apply -auto-approve
