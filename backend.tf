@@ -14,8 +14,11 @@ terraform {
   }
 
   backend "s3" {
-    key    = "tfstate.tfstate"
+    key    = "tfstate"
     bucket = "workout-odyssey-ping-lambda"
     region = "eu-west-2"
+
+    dynamodb_table = "terraform-locks"
+    encrypt        = true
   }
 }
