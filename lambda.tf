@@ -1,3 +1,11 @@
+# Create zip file
+data "archive_file" "function_zip_file" {
+  type = "zip"
+
+  source_file = "${path.module}/index.js"
+  output_path = "${path.module}/function.zip"
+}
+
 # Create lambda function using a locally sourced zip file
 resource "aws_lambda_function" "workout_odyssey_ping" {
   function_name = "workout-odyssey-ping"
@@ -6,15 +14,22 @@ resource "aws_lambda_function" "workout_odyssey_ping" {
   handler       = "index.handler"
   runtime       = "nodejs20.x"
 
-  filename         = "function.zip"
-  source_code_hash = filebase64sha256("function.zip")
+  filename         = data.archive_file.function_zip_file.output_path
+  source_code_hash = data.archive_file.function_zip_file.output_base64sha256
 
   depends_on = [
     aws_iam_role.wo_ping_lambda_role
   ]
 
+  logging_config {
+    log_format       = "JSON"
+    log_group        = aws_cloudwatch_log_group.wo_ping_log.name
+    system_log_level = "INFO"
+  }
+
   tags = {
-    Name = "Workout Odyssey ping"
+    Name      = "Workout Odyssey Ping"
+    Terraform = "true"
   }
 }
 
@@ -24,4 +39,13 @@ resource "aws_lambda_permission" "allow_cloudwatch_to_call_split_lambda" {
   function_name = aws_lambda_function.workout_odyssey_ping.function_name
   principal     = "events.amazonaws.com"
   source_arn    = aws_cloudwatch_event_rule.every_5_minutes.arn
+}
+
+resource "aws_cloudwatch_log_group" "wo_ping_log" {
+  name              = "/aws/lambda/workout-odyssey-ping"
+  retention_in_days = 30
+
+  tags = {
+    Terraform = "true"
+  }
 }

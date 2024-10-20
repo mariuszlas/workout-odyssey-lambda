@@ -8,7 +8,7 @@ locals {
 
 # Lambda IAM Role
 resource "aws_iam_role" "wo_ping_lambda_role" {
-  name = "demo-lambda-role"
+  name = "workout-odyssey-ping-lambda-role"
 
   assume_role_policy = jsonencode({
     "Version" : "2012-10-17",
@@ -23,27 +23,29 @@ resource "aws_iam_role" "wo_ping_lambda_role" {
     ]
   })
 
-  inline_policy {
-    name = "demo-lambda-policies"
-    policy = jsonencode({
-      "Version" : "2012-10-17",
-      "Statement" : [
-        {
-          "Effect" : "Allow",
-          "Action" : "logs:CreateLogGroup",
-          "Resource" : "arn:aws:logs:${data.aws_region.current.name}:${local.account_id}:*"
-        },
-        {
-          "Effect" : "Allow",
-          "Action" : [
-            "logs:CreateLogStream",
-            "logs:PutLogEvents"
-          ],
-          "Resource" : [
-            "arn:aws:logs:${data.aws_region.current.name}:${local.account_id}:log-group:/aws/lambda/*:*"
-          ]
-        }
-      ]
-    })
+  tags = {
+    Terraform = "true"
   }
+}
+
+# IAM Policy to attach to IAM Lambda Role
+resource "aws_iam_role_policy" "wo_ping_lambda_role_policy" {
+  name = "wo_ping_lambda_role_policy"
+  role = aws_iam_role.wo_ping_lambda_role.id
+
+  policy = jsonencode({
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Effect" : "Allow",
+        "Action" : [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ],
+        "Resource" : [
+          "arn:aws:logs:${data.aws_region.current.name}:${local.account_id}:log-group:/aws/lambda/*:*"
+        ]
+      }
+    ]
+  })
 }
